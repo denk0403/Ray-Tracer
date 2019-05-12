@@ -28,13 +28,15 @@ public class RayTracer extends JPanel {
 
 	private void initComponents() {
 
-		JFrame frame = new JFrame("Ray Tracer");
-		frame.setSize(200, 200);
+		JFrame frame = new JFrame("Ray Tracer Map");
+		frame.setSize(500, 500);
 		frame.setResizable(true);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		
+		
 		////////////////////////////////
 
-		this.setSize(new Dimension(200, 200));
+		this.setPreferredSize(new Dimension(500, 500));
 		Timer timer = new Timer(50, new ActionListener() {
 
 			@Override
@@ -155,15 +157,20 @@ public class RayTracer extends JPanel {
 					p.moveRight(true);
 					p.moveLeft(false);
 				}
+				if (e.getKeyChar() == 'e') {
+					barriers = new ArrayList<>();
+				}
 				RayTracer.this.repaint();
 			}
 		});
 
 		/////////////////////////////////////
+		new FirstPerson(this);
 		frame.add(this);
 		frame.pack();
 		frame.setLocationRelativeTo(null);
 		frame.setVisible(true);
+		
 	}
 
 	@Override

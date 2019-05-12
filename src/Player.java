@@ -12,8 +12,13 @@ public class Player {
 	private boolean MOVE_RIGHT;
 	private boolean MOVE_UP;
 	private boolean MOVE_DOWN;
+	private boolean MOVE_FORWARD;
+	private boolean MOVE_LEFTFORWARD;
+	private boolean MOVE_BACKWARD;
+	private boolean MOVE_RIGHTFORWARD;
 	private int speed = 3;
 	private List<Ray> rays = new ArrayList<>();
+	private int ROTATE;
 
 	public Player() {
 		this.x = 0;
@@ -51,6 +56,23 @@ public class Player {
 		if (this.MOVE_DOWN) {
 			this.move(0, -this.speed);
 		}
+		if(this.MOVE_FORWARD) {
+			this.move((int)(this.speed*Math.cos(this.theta)), (int)(this.speed*Math.sin(this.theta)));
+		}
+		if(this.MOVE_BACKWARD) {
+			this.move(-(int)(this.speed*Math.cos(this.theta)), -(int)(this.speed*Math.sin(this.theta)));
+		}
+		if(this.MOVE_LEFTFORWARD) {
+			this.move((int)(this.speed*Math.cos(this.theta + Math.PI/2)), (int)(this.speed*Math.sin(this.theta + Math.PI/2)));
+		}
+		if(this.MOVE_RIGHTFORWARD) {
+			this.move((int)(this.speed*Math.cos(this.theta - Math.PI/2)), (int)(this.speed*Math.sin(this.theta - Math.PI/2)));
+		}
+		if (this.ROTATE > 0) {
+			this.theta += Math.toRadians(5);
+		} else if (this.ROTATE < 0) {
+			this.theta -= Math.toRadians(5);
+		}
 	}
 
 	public void updateThetaTo(double theta) {
@@ -84,8 +106,26 @@ public class Player {
 	public void moveDown(boolean md) {
 		this.MOVE_DOWN = md;
 	}
+	
+	public void moveLeftForward(boolean ml) {
+		this.MOVE_LEFTFORWARD = ml;
+	}
 
-	public void drawRays(Graphics2D g2, List<Barrier> barriers) {
+	public void moveRightForward(boolean mr) {
+		this.MOVE_RIGHTFORWARD = mr;
+	}
+
+	public void moveForward(boolean mu) {
+		this.MOVE_FORWARD = mu;
+	}
+
+	public void moveBackward(boolean md) {
+		this.MOVE_BACKWARD = md;
+	}
+	
+	public List<Point> getIntersectionPoints(List<Barrier> barriers) {
+		List<Point> points = new ArrayList<>();
+		
 		this.rays = new ArrayList<>();
 		for (int angle = -45; angle <= 45; angle += 1) {
 			this.rays.add(new Ray(this.x, this.y, this.theta + Math.toRadians(angle)));
@@ -100,9 +140,30 @@ public class Player {
 						closest = curP;
 					}
 				}
-				if (closest != null)
-					g2.drawLine(this.x, this.y, closest.x, closest.y);
+				points.add(closest);	
+			}
+		}
+		return points;
+	}
+
+	public void drawRays(Graphics2D g2, List<Barrier> barriers) {
+		for (Point p : this.getIntersectionPoints(barriers)) {
+			if (p != null) {
+				g2.drawLine(this.x, this.y, p.x, p.y);
 			}
 		}
 	}
+	
+	public void rotateClockwise() {
+		this.ROTATE = -1;
+	}
+
+	public void rotateCClockwise() {
+		this.ROTATE = 1;
+	}
+	
+	public void stopRotation() {
+		this.ROTATE = 0;
+	}
+	
 }

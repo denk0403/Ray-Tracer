@@ -12,8 +12,10 @@ import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
+import java.io.IOException;
 import java.util.List;
 
+import javax.imageio.ImageIO;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.Timer;
@@ -21,6 +23,7 @@ import javax.swing.Timer;
 public class FirstPerson extends JComponent {
 
 	RayTracer rt;
+	private double rotationAngle = 30;
 
 	public FirstPerson(RayTracer rt) {
 		this.rt = rt;
@@ -153,7 +156,18 @@ public class FirstPerson extends JComponent {
 			@Override
 			public void mouseClicked(MouseEvent e) {
 				// TODO Auto-generated method stub
-
+				FirstPerson.this.rotationAngle = -10;
+				FirstPerson.this.repaint();
+				Timer timer = new Timer(150, new ActionListener() {
+					
+					@Override
+					public void actionPerformed(ActionEvent e) {
+						// TODO Auto-generated method stub
+						FirstPerson.this.rotationAngle = 30;
+						((Timer)(e.getSource())).stop();
+					}
+				});
+				timer.start();
 			}
 		});
 
@@ -171,7 +185,6 @@ public class FirstPerson extends JComponent {
 		g2.scale(1, -1);
 		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		g2.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
-		g2.setStroke(new BasicStroke(0));
 		List<Point> points = rt.p.getIntersectionPoints(rt.barriers);
 		for (int index = 0; index < points.size(); index += 1) {
 			Point pt = points.get(points.size() - index - 1);
@@ -185,23 +198,45 @@ public class FirstPerson extends JComponent {
 								- rt.p.getTheta()))));
 				g2.setColor(new Color(0, 150, 255));
 				g2.fillRect(index * this.getWidth() / points.size() - this.getWidth() / 2,
-						height/2, this.getWidth() / points.size() + 1, Math.max(0, this.getHeight()/2 - height/2) );
+						height/2, this.getWidth() / points.size(), Math.max(0, this.getHeight()/2 - height/2) );
 				g2.setColor(new Color(255, 255, 0, colorNum));
 				g2.fillRect(index * this.getWidth() / points.size() - this.getWidth() / 2,
-						-height / 2, this.getWidth() / points.size() + 1, height);
-				g2.setColor(new Color(100, 0, 0, colorNum));
+						-height / 2, this.getWidth() / points.size(), height);
+				g2.setColor(new Color(150, 0, 0, colorNum));
 				g2.fillRect(index * this.getWidth() / points.size() - this.getWidth() / 2,
 						-this.getHeight()/2, this.getWidth() / points.size() + 1, Math.max(0, this.getHeight()/2 - height/2) );
 			}
 			else {
 				g2.setColor(new Color(0, 150, 255));
 				g2.fillRect(index * this.getWidth() / points.size() - this.getWidth() / 2,
-						0, this.getWidth() / points.size() + 1, this.getHeight()/2);
-				g2.setColor(new Color(100, 0, 0, 0));
+						0, this.getWidth() / points.size(), this.getHeight()/2);
+				g2.setColor(new Color(150, 0, 0, 0));
 				g2.fillRect(index * this.getWidth() / points.size() - this.getWidth() / 2,
-						-this.getHeight()/2, this.getWidth() / points.size() +1, this.getHeight()/2);
+						-this.getHeight()/2, this.getWidth() / points.size(), this.getHeight()/2);
 			}
 
 		}
+		g2.scale(1, -1);
+		try {
+			g2.drawImage(ImageIO.read(this.getClass().getResourceAsStream("/inside car.png")), -250, -250, this);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		g2.rotate(Math.toRadians(this.rotationAngle), 250, 250);
+		try {
+			g2.drawImage(ImageIO.read(this.getClass().getResourceAsStream("/Wooden Pickaxe.png")), 50, 50, this);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		g2.rotate(-Math.toRadians(this.rotationAngle), 250, 250);
+		g2.scale(0.154, 0.154);
+		g2.setColor(Color.BLACK);
+		g2.fillRect(-105, 625, 500, 500);
+		g2.translate(-100, 0);
+		g2.translate(0, 625);
+		if (rt.p.getX() < 250 || rt.p.getX() > -250 || rt.p.getY() < 250 || rt.p.getY() > -250)
+			rt.paintComponent(g2);
 	}
 }

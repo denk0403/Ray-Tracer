@@ -24,6 +24,7 @@ public class FirstPerson extends JComponent {
 
 	RayTracer rt;
 	private double rotationAngle = 30;
+	private int yShift = 0;
 
 	public FirstPerson(RayTracer rt) {
 		this.rt = rt;
@@ -119,6 +120,14 @@ public class FirstPerson extends JComponent {
 					rt.p.stopRotation();
 					rt.repaint();
 				}
+				if (e.getY() < FirstPerson.this.getWidth() / 8 && Math.abs(FirstPerson.this.yShift + 10) < FirstPerson.this.getHeight()/2) {
+					FirstPerson.this.yShift += 10;
+					rt.repaint();
+				}
+				if (e.getY() > 7 * FirstPerson.this.getWidth() / 8 && Math.abs(FirstPerson.this.yShift - 10) < FirstPerson.this.getHeight()/2) {
+					FirstPerson.this.yShift -= 10;
+					rt.repaint();
+				}
 			}
 
 			@Override
@@ -158,13 +167,17 @@ public class FirstPerson extends JComponent {
 				// TODO Auto-generated method stub
 				FirstPerson.this.rotationAngle = -10;
 				FirstPerson.this.repaint();
+				if (e.getClickCount() >= 2) {
+					FirstPerson.this.yShift = 0;
+					rt.repaint();
+				}
 				Timer timer = new Timer(150, new ActionListener() {
-					
+
 					@Override
 					public void actionPerformed(ActionEvent e) {
 						// TODO Auto-generated method stub
 						FirstPerson.this.rotationAngle = 30;
-						((Timer)(e.getSource())).stop();
+						((Timer) (e.getSource())).stop();
 					}
 				});
 				timer.start();
@@ -186,46 +199,54 @@ public class FirstPerson extends JComponent {
 		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		g2.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
 		List<Point> points = rt.p.getIntersectionPoints(rt.barriers);
+		if (points.isEmpty()) {
+			g2.setColor(new Color(0, 150, 255));
+			g2.fillRect(-this.getWidth() / 2, -yShift, this.getWidth(), this.getHeight() / 2);
+		}
 		for (int index = 0; index < points.size(); index += 1) {
 			Point pt = points.get(points.size() - index - 1);
 			if (pt != null) {
 				double distance = new Point(rt.p.getX(), rt.p.getY()).distance(pt);
-				int colorNum = (int) Math.max(0, (255 * (1 - Math.pow(distance / 200.0, 200/distance))));
+				int colorNum = (int) Math.max(0,
+						(255 * (1 - Math.pow(distance / 200.0, 200 / distance))));
 				// int height = (int)(16.5*Math.sqrt(500 - (int)(500 * distance/200.0)));
-				// int height = 400-(int)(distance * (Math.atan2(pt.y-rt.p.getY(), pt.x-rt.p.getX()) - rt.p.getTheta())/(Math.PI/2));
-				int height = (int) (500 / Math.sqrt(
-						distance * Math.cos((Math.atan2(pt.y - rt.p.getY(), pt.x - rt.p.getX())
-								- rt.p.getTheta()))));
+				// int height = 400-(int)(distance * (Math.atan2(pt.y-rt.p.getY(),
+				// pt.x-rt.p.getX()) - rt.p.getTheta())/(Math.PI/2));
+				int height = (int) (500 / Math.sqrt(distance * Math.cos(
+						(Math.atan2(pt.y - rt.p.getY(), pt.x - rt.p.getX()) - rt.p.getTheta()))));
+				// sky
 				g2.setColor(new Color(0, 150, 255));
 				g2.fillRect(index * this.getWidth() / points.size() - this.getWidth() / 2,
-						height/2, this.getWidth() / points.size(), Math.max(0, this.getHeight()/2 - height/2) );
+						height / 2 - yShift, this.getWidth() / points.size(),
+						this.getHeight());
+				//walls
 				g2.setColor(new Color(255, 255, 0, colorNum));
 				g2.fillRect(index * this.getWidth() / points.size() - this.getWidth() / 2,
-						-height / 2, this.getWidth() / points.size(), height);
-				g2.setColor(new Color(150, 0, 0, colorNum));
+						-height / 2 - yShift, this.getWidth() / points.size(), height);
+				//floor
+				g2.setColor(new Color(150, 0, 0, colorNum)); 
 				g2.fillRect(index * this.getWidth() / points.size() - this.getWidth() / 2,
-						-this.getHeight()/2, this.getWidth() / points.size() + 1, Math.max(0, this.getHeight()/2 - height/2) );
-			}
-			else {
+						-this.getHeight() - yShift, this.getWidth() / points.size(),
+						Math.max(0, this.getHeight() - height / 2));
+			} else {
 				g2.setColor(new Color(0, 150, 255));
 				g2.fillRect(index * this.getWidth() / points.size() - this.getWidth() / 2,
-						0, this.getWidth() / points.size(), this.getHeight()/2);
-				g2.setColor(new Color(150, 0, 0, 0));
-				g2.fillRect(index * this.getWidth() / points.size() - this.getWidth() / 2,
-						-this.getHeight()/2, this.getWidth() / points.size(), this.getHeight()/2);
+						0 - yShift, this.getWidth() / points.size(), this.getHeight());
 			}
 
 		}
 		g2.scale(1, -1);
 		try {
-			g2.drawImage(ImageIO.read(this.getClass().getResourceAsStream("/inside car.png")), -250, -250, this);
+			g2.drawImage(ImageIO.read(this.getClass().getResourceAsStream("/inside car.png")), -250,
+					-250, this);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		g2.rotate(Math.toRadians(this.rotationAngle), 250, 250);
 		try {
-			g2.drawImage(ImageIO.read(this.getClass().getResourceAsStream("/Wooden Pickaxe.png")), 50, 50, this);
+			g2.drawImage(ImageIO.read(this.getClass().getResourceAsStream("/Wooden Pickaxe.png")),
+					50, 50, this);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

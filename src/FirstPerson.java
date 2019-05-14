@@ -1,8 +1,10 @@
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
+import java.awt.RenderingHints;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
@@ -26,35 +28,35 @@ public class FirstPerson extends JComponent {
 	}
 
 	private void initComponents() {
-		
+
 		JFrame frame = new JFrame("Ray Tracer First-Person");
 		frame.setSize(500, 500);
 		frame.setResizable(false);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setBackground(Color.BLACK);
 		//////////////////////
-		
+
 		this.setPreferredSize(new Dimension(500, 500));
 		this.setOpaque(true);
 		this.setBackground(Color.BLACK);
-		
+
 		Timer timer = new Timer(50, new ActionListener() {
-			
+
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				FirstPerson.this.repaint();
 			}
 		});
 		timer.start();
-		
+
 		frame.addKeyListener(new KeyListener() {
-			
+
 			@Override
 			public void keyTyped(KeyEvent e) {
 				// TODO Auto-generated method stub
-				
+
 			}
-			
+
 			@Override
 			public void keyReleased(KeyEvent e) {
 				// TODO Auto-generated method stub
@@ -97,9 +99,8 @@ public class FirstPerson extends JComponent {
 			}
 		});
 
-		
 		this.addMouseMotionListener(new MouseMotionListener() {
-			
+
 			@Override
 			public void mouseMoved(MouseEvent e) {
 				if (e.getX() > 3 * FirstPerson.this.getWidth() / 4) {
@@ -110,51 +111,52 @@ public class FirstPerson extends JComponent {
 					rt.p.rotateCClockwise();
 					rt.repaint();
 				}
-				if (e.getX() > FirstPerson.this.getWidth() / 4 && e.getX() < 3 * FirstPerson.this.getWidth() / 4) {
+				if (e.getX() > FirstPerson.this.getWidth() / 4
+						&& e.getX() < 3 * FirstPerson.this.getWidth() / 4) {
 					rt.p.stopRotation();
 					rt.repaint();
 				}
 			}
-			
+
 			@Override
 			public void mouseDragged(MouseEvent e) {
 				// TODO Auto-generated method stub
-				
+
 			}
 		});
-		
+
 		this.addMouseListener(new MouseListener() {
-			
+
 			@Override
 			public void mouseReleased(MouseEvent e) {
 				// TODO Auto-generated method stub
-				
+
 			}
-			
+
 			@Override
 			public void mousePressed(MouseEvent e) {
 				// TODO Auto-generated method stub
-				
+
 			}
-			
+
 			@Override
 			public void mouseExited(MouseEvent e) {
 				rt.p.stopRotation();
 			}
-			
+
 			@Override
 			public void mouseEntered(MouseEvent e) {
 				// TODO Auto-generated method stub
-				
+
 			}
-			
+
 			@Override
 			public void mouseClicked(MouseEvent e) {
 				// TODO Auto-generated method stub
-				
+
 			}
 		});
-		
+
 		////////////////////
 		frame.add(this);
 		frame.pack();
@@ -164,23 +166,42 @@ public class FirstPerson extends JComponent {
 
 	@Override
 	protected void paintComponent(Graphics g) {
-		Graphics2D g2 = (Graphics2D)g;
-		g2.translate(this.getWidth()/2, this.getHeight()/2);
+		Graphics2D g2 = (Graphics2D) g;
+		g2.translate(this.getWidth() / 2, this.getHeight() / 2);
 		g2.scale(1, -1);
+		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+		g2.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+		g2.setStroke(new BasicStroke(0));
 		List<Point> points = rt.p.getIntersectionPoints(rt.barriers);
 		for (int index = 0; index < points.size(); index += 1) {
-			Point p = points.get(points.size()-index-1);
-			if (p != null) {
-				double distance = new Point(rt.p.getX(), rt.p.getY()).distance(p);
-				if (distance < 200) {
-					int colorNum = 200 - (int) ((distance * distance) / 200);
-					g2.setColor(new Color(colorNum, colorNum, colorNum));
-					int height = (int)(16.5*Math.sqrt(500 - (int)(500 * distance/200.0)));
-					g2.fillRect(index * this.getWidth()/points.size() - this.getWidth()/2, -this.getHeight()/4, this.getWidth()/points.size(), height);
-				}
-				
+			Point pt = points.get(points.size() - index - 1);
+			if (pt != null) {
+				double distance = new Point(rt.p.getX(), rt.p.getY()).distance(pt);
+				int colorNum = (int) Math.max(0, (255 * (1 - Math.pow(distance / 200.0, 200/distance))));
+				// int height = (int)(16.5*Math.sqrt(500 - (int)(500 * distance/200.0)));
+				// int height = 400-(int)(distance * (Math.atan2(pt.y-rt.p.getY(), pt.x-rt.p.getX()) - rt.p.getTheta())/(Math.PI/2));
+				int height = (int) (500 / Math.sqrt(
+						distance * Math.cos((Math.atan2(pt.y - rt.p.getY(), pt.x - rt.p.getX())
+								- rt.p.getTheta()))));
+				g2.setColor(new Color(0, 150, 255));
+				g2.fillRect(index * this.getWidth() / points.size() - this.getWidth() / 2,
+						height/2, this.getWidth() / points.size() + 1, Math.max(0, this.getHeight()/2 - height/2) );
+				g2.setColor(new Color(255, 255, 0, colorNum));
+				g2.fillRect(index * this.getWidth() / points.size() - this.getWidth() / 2,
+						-height / 2, this.getWidth() / points.size() + 1, height);
+				g2.setColor(new Color(100, 0, 0, colorNum));
+				g2.fillRect(index * this.getWidth() / points.size() - this.getWidth() / 2,
+						-this.getHeight()/2, this.getWidth() / points.size() + 1, Math.max(0, this.getHeight()/2 - height/2) );
 			}
-			
+			else {
+				g2.setColor(new Color(0, 150, 255));
+				g2.fillRect(index * this.getWidth() / points.size() - this.getWidth() / 2,
+						0, this.getWidth() / points.size() + 1, this.getHeight()/2);
+				g2.setColor(new Color(100, 0, 0, 0));
+				g2.fillRect(index * this.getWidth() / points.size() - this.getWidth() / 2,
+						-this.getHeight()/2, this.getWidth() / points.size() +1, this.getHeight()/2);
+			}
+
 		}
 	}
 }
